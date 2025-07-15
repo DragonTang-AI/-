@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>舞动时刻 - 舞蹈游戏原型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Segoe UI', sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            overflow: hidden;
+        }
+        
+        /* 教练区域 */
+        .coach-container {
+            position: absolute;
+            width: 40%;
+            height: 70%;
+            left: 5%;
+            top: 10%;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 183, 255, 0.5);
+        }
+        
+        .coach-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: hue-rotate(0deg);
+            transition: filter 0.5s;
+        }
+        
+        /* 玩家镜像区域 */
+        .player-avatar {
+            position: absolute;
+            width: 30%;
+            height: 50%;
+            right: 5%;
+            top: 15%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 183, 255, 0.7);
+            border-radius: 15px;
+            overflow: hidden;
+            transform: translateY(0);
+            animation: float 3s infinite ease-in-out;
+        }
+        
+        .player-silhouette {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: drop-shadow(0 0 15px cyan);
+        }
+        
+        /* 心电图系统 */
+        .heart-monitor {
+            position: absolute;
+            width: 20%;
+            height: 15%;
+            left: 5%;
+            bottom: 20%;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            padding: 10px;
+            backdrop-filter: blur(5px);
+        }
+        
+        #ecg-canvas {
+            width: 100%;
+            height: 70%;
+            background: transparent;
+        }
+        
+        .heart-rate-display {
+            text-align: center;
+            font-size: 1.2em;
+            color: #ff5e7d;
+            margin-top: 5px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 94, 125, 0.7);
+        }
+        
+        /* 弹幕系统 */
+        .barrage-system {
+            position: absolute;
+            top: 5%;
+            width: 100%;
+            height: 10%;
+            overflow: hidden;
+        }
+        
+        .dog-banner {
+            position: absolute;
+            top: 0;
+            left: -30%;
+            height: 100%;
+            transition: transform 0.3s;
+        }
+        
+        .banner-text {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.8em;
+            color: gold;
+            left: 35%;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            font-weight: bold;
+        }
+        
+        /* 动作模板区域 */
+        .action-track {
+            position: absolute;
+            width: 25%;
+            height: 15%;
+            right: 5%;
+            bottom: 10%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .track-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .move-icon {
+            position: absolute;
+            width: 20%;
+            height: 80%;
+            background: linear-gradient(45deg, #00b3ff, #8a2be2);
+            border-radius: 8px;
+            top: 10%;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .hit-zone {
+            position: absolute;
+            width: 15px;
+            height: 100%;
+            background: rgba(255, 215, 0, 0.5);
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* 数据可视化区域 */
+        .stats-container {
+            position: absolute;
+            width: 25%;
+            height: 15%;
+            left: 5%;
+            top: 5%;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+        }
+        
+        .stat-box {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .calorie-display {
+            color: #ff7e29;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .time-display {
+            color: #00ffea;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .score-display {
+            color: #ff5e7d;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .burger-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(to bottom, #8B4513, #A0522D);
+            border-radius: 50%;
+            margin-top: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .melt-effect {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 0%;
+            background: rgba(139, 69, 19, 0.7);
+            transition: height 2s;
+        }
+        
+        .sand-clock {
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(to bottom, #f5f5dc, #d2b48c);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            position: relative;
+            margin-top: 5px;
+        }
+        
+        .sand-flow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 100%;
+            background: #cd853f;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+        
+        /* 特效系统 */
+        .hit-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 10;
+        }
+        
+        .explosion {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff0, #f90, transparent 70%);
+            opacity: 0;
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 4px solid rgba(0, 183, 255, 0.8);
+            transform: scale(0);
+        }
+        
+        /* 动画定义 */
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0); }
+        }
+        
+        @keyframes explode {
+            0% { transform: scale(0); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.7; }
+            100% { transform: scale(5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 教练舞蹈区域 -->
+        <div class="coach-container">
+            <img src="https://example.com/dance_coach.gif" class="coach-video">
+        </div>
+        
+        <!-- 玩家镜像系统 -->
+        <div class="player-avatar">
+            <img src="https://example.com/player_silhouette.gif" class="player-silhouette">
+        </div>
+        
+        <!-- 心电图系统 -->
+        <div class="heart-monitor">
+            <canvas id="ecg-canvas"></canvas>
+            <div class="heart-rate-display">❤️ <span id="hr-value">128</span> BPM</div>
+        </div>
+        
+        <!-- 弹幕系统 -->
+        <div class="barrage-system">
+            <img src="https://example.com/dancing_dog.png" class="dog-banner">
+            <div class="banner-text" id="banner-text">太棒了！连击10次！</div>
+        </div>
+        
+        <!-- 动作模板轨道 -->
+        <div class="action-track">
+            <div class="track-container">
+                <div class="hit-zone"></div>
+                <div class="move-icon">💃</div>
+            </div>
+        </div>
+        
+        <!-- 数据可视化区域 -->
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="calorie-display" id="calories">89</div>
+                <div>卡路里</div>
+                <div class="burger-icon">
+                    <div class="melt-effect" id="melt"></div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="time-display" id="timer">1:30</div>
+                <div>剩余时间</div>
+                <div class="sand-clock">
+                    <div class="sand-flow" id="sand"></div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="score-display" id="score">8600</div>
+                <div>得分</div>
+                <div class="star-rating">★★★★☆</div>
+            </div>
+        </div>
+        
+        <!-- 打击特效容器 -->
+        <div class="hit-effect" id="hit-effect"></div>
+    </div>
+
+    <script>
+        // 初始参数配置
+        const CONFIG = {
+            ecgUpdateInterval: 500,
+            effectDuration: 3000,
+            moveSpeed: 2
+        };
+        
+        // DOM元素引用
+        const ecgCanvas = document.getElementById('ecg-canvas');
+        const hrValue = document.getElementById('hr-value');
+        const banner = document.querySelector('.dog-banner');
+        const bannerText = document.getElementById('banner-text');
+        const hitEffect = document.getElementById('hit-effect');
+        const calorieDisplay = document.getElementById('calories');
+        const timerDisplay = document.getElementById('timer');
+        const scoreDisplay = document.getElementById('score');
+        const meltEffect = document.getElementById('melt');
+        const sandEffect = document.getElementById('sand');
+        const moveIcon = document.querySelector('.move-icon');
+        const coachVideo = document.querySelector('.coach-video');
+        
+        // 游戏状态
+        const gameState = {
+            heartRate: 128,
+            calories: 89,
+            score: 8600,
+            combo: 0,
+            timer: 90, // 秒
+            isPerfect: false,
+            movePosition: 100 // % from right
+        };
+        
+        // 初始化心电图
+        function initECG() {
+            const ctx = ecgCanvas.getContext('2d');
+            ecgCanvas.width = ecgCanvas.offsetWidth;
+            ecgCanvas.height = ecgCanvas.offsetHeight;
+            
+            ctx.strokeStyle = '#ff5e7d';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+        }
+        
+        // 更新心电图
+        function updateECG() {
+            const ctx = ecgCanvas.getContext('2d');
+            ctx.clearRect(0, 0, ecgCanvas.width, ecgCanvas.height);
+            
+            const maxHeartRate = 150;
+            const amplitude = ecgCanvas.height / 3;
+            const heartRateFactor = gameState.heartRate / maxHeartRate;
+            
+            ctx.beginPath();
+            ctx.moveTo(0, ecgCanvas.height / 2);
+            
+            for (let x = 0; x < ecgCanvas.width; x++) {
+                const phase = (x / ecgCanvas.width) * 4 * Math.PI;
+                const noise = Math.sin(Date.now() / 300 + x * 0.1) * 3;
+                
+                // 模拟心电图波形
+                let y = ecgCanvas.height / 2 + 
+                    Math.sin(phase) * (amplitude * 0.3) +
+                    Math.sin(phase * 5) * (amplitude * 0.2) +
+                    Math.sin(phase * 0.5 + x * 0.3) * (amplitude * 0.2) +
+                    noise;
+                
+                // 模拟心跳冲击
+                if (gameState.isPerfect && x > ecgCanvas.width * 0.6 && x < ecgCanvas.width * 0.8) {
+                    y -= amplitude * 0.6 * Math.sin((x - ecgCanvas.width * 0.7) * 4);
+                }
+                
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+        }
+        
+        // 显示打击特效
+        function showHitEffect(type) {
+            hitEffect.innerHTML = '';
+            hitEffect.style.opacity = '1';
+            
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = `${Math.random() * 70 + 15}%`;
+            explosion.style.top = `${Math.random() * 60 + 20}%`;
+            explosion.style.animation = 'explosion 1s forwards';
+            
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = `${moveIcon.offsetLeft + moveIcon.offsetWidth/2}px`;
+            ripple.style.top = `${moveIcon.offsetTop + moveIcon.offsetHeight/2}px`;
+            ripple.style.animation = `ripple 0.8s forwards`;
+            ripple.style.borderColor = type === 'perfect' ? 'gold' : '#00b3ff';
+            
+            hitEffect.appendChild(explosion);
+            hitEffect.appendChild(ripple);
+            
+            // 震动效果
+            if (navigator.vibrate) navigator.vibrate(300);
+            
+            // 重置特效
+            setTimeout(() => {
+                hitEffect.style.opacity = '0';
+            }, 800);
+        }
+        
+        // 显示弹幕
+        function showBarrage(message) {
+            banner.style.transform = 'translateX(110%)';
+            bannerText.textContent = message;
+            
+            setTimeout(() => {
+                banner.style.transition = 'transform 2s ease-out';
+                banner.style.transform = 'translateX(0%)';
+                
+                setTimeout(() => {
+                    banner.style.transition = 'transform 0.8s ease-in';
+                    banner.style.transform = 'translateX(-130%)';
+                }, 3000);
+            }, 100);
+        }
+        
+        // 更新UI显示
+        function updateUI() {
+            hrValue.textContent = gameState.heartRate;
+            calorieDisplay.textContent = gameState.calories;
+            scoreDisplay.textContent = gameState.score;
+            
+            // 卡路里融化效果
+            const meltPercent = Math.min(100, gameState.calories / 2);
+            meltEffect.style.height = `${meltPercent}%`;
+            
+            // 沙漏效果
+            const sandPercent = (gameState.timer / 90) * 100;
+            sandEffect.style.height = `${sandPercent}%`;
+            
+            // 移动动作图标
+            moveIcon.style.right = `${gameState.movePosition}%`;
+            
+            // 时间显示格式
+            const minutes = Math.floor(gameState.timer / 60);
+            const seconds = gameState.timer % 60;
+            timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            // 教练特效
+            if (gameState.combo >= 5) {
+                coachVideo.style.filter = 'hue-rotate(90deg) brightness(1.2)';
+            } else {
+                coachVideo.style.filter = 'hue-rotate(0deg) brightness(1)';
+            }
+        }
+        
+        // 游戏主循环
+        function gameLoop() {
+            // 更新游戏状态
+            gameState.heartRate = Math.min(150, Math.max(80, gameState.heartRate + (Math.random() - 0.4) * 3));
+            
+            if (gameState.combo > 3) {
+                gameState.heartRate += 1;
+            }
+            
+            gameState.movePosition -= gameState.moveSpeed;
+            
+            // 移动图标到达打击点
+            if (gameState.movePosition < 45 && gameState.movePosition > 35) {
+                gameState.isPerfect = true;
+                
+                // 模拟完美打击
+                if (Math.random() > 0.3) {
+                    gameState.combo++;
+                    gameState.score += 100 * gameState.combo;
+                    gameState.calories -= 0.5;
+                    
+                    if (gameState.combo % 5 === 0) {
+                        const messages = [
+                            "太棒了！连击王！",
+                            "简直是在飞！",
+                            "这就是舞王实力！",
+                            "教练都惊呆了！",
+                            "心率爆表啦！"
+                        ];
+                        showBarrage(messages[Math.floor(Math.random() * messages.length)]);
+                    }
+                    
+                    showHitEffect('perfect');
+                }
+            }
+            
+            // 重置移动图标位置
+            if (gameState.movePosition < 5) {
+                gameState.movePosition = 100;
+                gameState.isPerfect = false;
+            }
+            
+            // 更新时间
+            if (gameState.timer > 0) {
+                gameState.timer--;
+            }
+            
+            // 更新UI
+            updateECG();
+            updateUI();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 启动游戏
+        window.addEventListener('DOMContentLoaded', () => {
+            initECG();
+            updateECG();
+            setInterval(updateECG, CONFIG.ecgUpdateInterval);
+            gameLoop();
+        });
+    </script>
+</body>
+</html>
